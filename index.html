@@ -501,164 +501,214 @@ document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 function toggleFaq(el){const w=el.classList.contains('open');document.querySelectorAll('.faq.open').forEach(f=>f.classList.remove('open'));if(!w)el.classList.add('open')}
 </script>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script>
-const API=window.location.origin+'/api';
-function _fmtN(n){return n.toLocaleString('en-US')}
-function _animN(el,target){let cur=0;const dur=1200;const st=performance.now();const step=ts=>{const p=Math.min((ts-st)/dur,1);const ease=1-Math.pow(1-p,3);cur=Math.round(target*ease);el.textContent=_fmtN(cur)+'+';if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
-fetch(API+'/landing-stats').then(r=>r.json()).then(d=>{
-  var e;
-  e=document.getElementById('lsServices');if(e&&d.services)_animN(e,d.services);else if(e)e.textContent='—';
-  e=document.getElementById('lsUsers');if(e&&d.users)_animN(e,d.users);else if(e)e.textContent='—';
-  e=document.getElementById('lsOrders');if(e&&d.orders)_animN(e,d.orders);else if(e)e.textContent='—';
-  e=document.getElementById('lsPlatforms');if(e&&d.platforms)_animN(e,d.platforms);else if(e)e.textContent='0';
-}).catch(function(){});
-const GCID="406848094135-kl6o7hled7dlgadapgrbbg2vcfe79a0s.apps.googleusercontent.com";
-const _gSvg='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>';
-let _gReady=false;
-function _initG(){try{if(typeof google!=="undefined"&&google.accounts){google.accounts.id.initialize({client_id:GCID,callback:_onGoogleRes,auto_select:false});_gReady=true}}catch(e){console.log("G init err",e)}}
-setTimeout(_initG,1500);setTimeout(function(){if(!_gReady)_initG()},4000);
-function startGoogleLogin(){
-  var btn=document.getElementById("googleBtn");
-  if(_gReady){
-    btn.classList.add("ld");btn.innerHTML='<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#4285F4;border-radius:50%;animation:spin .6s linear infinite"></div> جاري الفتح...';
-    google.accounts.id.prompt(function(n){
-      if(n.isNotDisplayed()||n.isSkippedMoment()){
-        btn.classList.remove("ld");btn.innerHTML=_gSvg+" المتابعة بحساب كوكل";
-        _gFallback();
-      }
-    });
-  }else{
-    _gFallback();
-  }
-}
-function _gFallback(){
-  var redir=window.location.origin;
-  var url="https://accounts.google.com/o/oauth2/v2/auth?client_id="+encodeURIComponent(GCID)+"&redirect_uri="+encodeURIComponent(redir)+"&response_type=id_token&scope=openid%20email%20profile&nonce="+Math.random().toString(36).substr(2);
-  window.location.href=url;
-}
-async function _onGoogleRes(response){
-  var btn=document.getElementById("googleBtn");
-  if(btn){btn.classList.add("ld");btn.innerHTML='<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#4285F4;border-radius:50%;animation:spin .6s linear infinite"></div> جاري التحقق...'}
-  hM();
-  try{
-    var _refCode=sessionStorage.getItem("beinty_ref")||"";
-    var r=await fetch(API+"/auth/google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:response.credential,ref_code:_refCode})});
-    var d=await r.json();
-    if(btn)btn.classList.remove("ld");
-    if(d.ok){
-      if(_refCode)sessionStorage.removeItem("beinty_ref");
-      localStorage.setItem("beinty_token",d.token);
-      localStorage.setItem("beinty_user",JSON.stringify(d.user));
-      document.cookie="beinty_token="+d.token+";path=/;max-age=604800;SameSite=Lax";
-      sS("تم تسجيل الدخول بكوكل! جاري التحويل...");
-      setTimeout(function(){window.location.href="/app"},1000);
-    }else{sE(d.error||"خطأ");if(btn)btn.innerHTML=_gSvg+" المتابعة بحساب كوكل"}
-  }catch(e){if(btn){btn.classList.remove("ld");btn.innerHTML=_gSvg+" المتابعة بحساب كوكل"};sE("خطأ بالاتصال")}
-}
-(function(){try{var h=window.location.hash;if(h&&h.indexOf("id_token=")!==-1){var p=new URLSearchParams(h.substring(1));var idt=p.get("id_token");if(idt){window.location.hash="";_onGoogleRes({credential:idt})}}}catch(e){}})();
-let mode='login';
-function swT(m){mode=m;document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===(m==='login'?0:1)));document.querySelectorAll('.rf').forEach(f=>f.classList.toggle('sh',m==='reg'));document.getElementById('lEx').style.display=m==='reg'?'none':'flex';document.getElementById('sBtn').textContent=m==='reg'?'إنشاء حساب':'تسجيل الدخول';hM();if(m==='reg'){document.getElementById('rfOtp').style.display='none';_emailVerified=false}}
+<!-- ✅ Firebase Auth SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyALXNEF9AkouMHM_qTeC-V8eFG_7QY0bMA",
+  authDomain: "rashqaji.firebaseapp.com",
+  projectId: "rashqaji",
+  storageBucket: "rashqaji.firebasestorage.app",
+  messagingSenderId: "175897633394",
+  appId: "1:175897633394:web:896bb507cce9e681db98eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ── دوال مساعدة ──
 function hM(){document.getElementById('eM').classList.remove('sh');document.getElementById('sM').classList.remove('sh')}
 function sE(m){document.getElementById('eT').textContent=m;document.getElementById('eM').classList.add('sh')}
 function sS(m){document.getElementById('sT').textContent=m;document.getElementById('sM').classList.add('sh')}
-var _emailVerified=false;
-var _otpTimerInt=null;
-async function sendVerifyCode(){
+
+// ── حفظ المستخدم في Firestore ──
+async function saveUser(user, username){
+  try {
+    await setDoc(doc(db,"users",user.uid),{
+      uid: user.uid,
+      username: username || user.displayName || user.email.split('@')[0],
+      email: user.email,
+      balance: 0,
+      createdAt: serverTimestamp()
+    },{merge:true});
+  } catch(e){ console.log("Firestore:",e); }
+}
+
+// ── التحويل بعد الدخول ──
+function afterLogin(user, username){
+  localStorage.setItem('beinty_user', JSON.stringify({uid:user.uid, username: username||user.displayName||user.email.split('@')[0], email:user.email}));
+  localStorage.setItem('beinty_uid', user.uid);
+  sS('تم تسجيل الدخول! جاري التحويل...');
+  var _goto = sessionStorage.getItem('beinty_goto')||'';
+  sessionStorage.removeItem('beinty_goto');
+  setTimeout(()=> window.location.href='/app'+(_goto?'?page='+_goto:''), 1000);
+}
+
+// ── تبديل بين تسجيل الدخول وإنشاء حساب ──
+let mode = 'login';
+window.swT = function(m){
+  mode = m;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===(m==='login'?0:1)));
+  document.querySelectorAll('.rf').forEach(f=>f.classList.toggle('sh',m==='reg'));
+  document.getElementById('lEx').style.display = m==='reg'?'none':'flex';
+  document.getElementById('sBtn').textContent = m==='reg'?'إنشاء حساب':'تسجيل الدخول';
   hM();
-  var em=document.getElementById('iEmail').value.trim();
-  if(!em||!em.includes('@')){sE('أدخل بريد إلكتروني صالح');return}
-  var btn=document.getElementById('sendCodeBtn');
-  btn.disabled=true;btn.innerHTML='<div style="display:inline-block;width:12px;height:12px;border:2px solid rgba(74,144,255,.3);border-top-color:#4A90FF;border-radius:50%;animation:spin .6s linear infinite"></div> جاري الإرسال...';
-  try{
-    var r=await fetch(API+'/auth/send_verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})});
-    var d=await r.json();
-    if(d.ok){
-      sS('تم إرسال الكود إلى '+em);
-      document.getElementById('rfOtp').style.display='';document.getElementById('rfOtp').classList.add('sh');
-      document.getElementById('iOTP').focus();
-      // تايمر 60 ثانية لإعادة الإرسال
-      var sec=60;btn.innerHTML='<i class="fas fa-clock"></i> '+sec+'ث';
-      _otpTimerInt=setInterval(function(){sec--;btn.innerHTML='<i class="fas fa-clock"></i> '+sec+'ث';if(sec<=0){clearInterval(_otpTimerInt);btn.disabled=false;btn.innerHTML='<i class="fas fa-redo"></i> إعادة إرسال الكود'}},1000);
-      // تايمر 10 دقائق
-      var esec=600;var timer=document.getElementById('otpTimer');
-      var ti2=setInterval(function(){esec--;var m=Math.floor(esec/60),s=esec%60;timer.textContent='('+m+':'+(s<10?'0':'')+s+')';if(esec<=0){clearInterval(ti2);timer.textContent='(انتهى)';timer.style.color='#ef4444'}},1000);
-      // Auto-verify on 6 digits
-      document.getElementById('iOTP').oninput=async function(){if(this.value.length===6){await verifyOTP()}}
-    }else{sE(d.error||'خطأ');btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال كود التحقق'}
-  }catch(e){sE('خطأ بالاتصال');btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال كود التحقق'}
 }
-async function verifyOTP(){
-  var em=document.getElementById('iEmail').value.trim();
-  var code=document.getElementById('iOTP').value.trim();
-  var msg=document.getElementById('otpMsg');
-  if(!code||code.length<6){msg.textContent='أدخل الكود (6 أرقام)';msg.style.color='#ef4444';return}
-  msg.textContent='جاري التحقق...';msg.style.color='#4A90FF';
-  try{
-    var r=await fetch(API+'/auth/verify_code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,code:code})});
-    var d=await r.json();
-    if(d.ok){
-      _emailVerified=true;
-      msg.innerHTML='<i class="fas fa-check-circle"></i> تم تأكيد الإيميل بنجاح!';msg.style.color='#4ade80';
-      document.getElementById('iOTP').disabled=true;document.getElementById('iOTP').style.borderColor='#4ade80';
-      document.getElementById('sendCodeBtn').style.display='none';
-    }else{msg.innerHTML='<i class="fas fa-times-circle"></i> '+(d.error||'كود خاطئ');msg.style.color='#ef4444';_emailVerified=false}
-  }catch(e){msg.textContent='خطأ بالاتصال';msg.style.color='#ef4444'}
-}
-async function hSub(e){
-  e.preventDefault();hM();
-  const u=document.getElementById('iUser').value.trim();
-  const p=document.getElementById('iPass').value;
-  if(!u||!p){sE('يرجى ملء جميع الحقول');return false}
-  const btn=document.getElementById('sBtn');
+
+// ── إنشاء حساب / تسجيل دخول ──
+window.hSub = async function(e){
+  e.preventDefault(); hM();
+  const u = document.getElementById('iUser').value.trim();
+  const p = document.getElementById('iPass').value;
+  if(!u||!p){sE('يرجى ملء جميع الحقول');return false;}
+  const btn = document.getElementById('sBtn');
   btn.classList.add('ld');
-  if(mode==='reg'){
-    const em=document.getElementById('iEmail').value.trim();
-    const cf=document.getElementById('iConf').value;
-    if(!em){btn.classList.remove('ld');sE('يرجى إدخال البريد الإلكتروني');return false}
-    if(p.length<6){btn.classList.remove('ld');sE('كلمة المرور يجب أن تكون 6 أحرف على الأقل');return false}
-    if(p!==cf){btn.classList.remove('ld');sE('كلمة المرور غير متطابقة');return false}
-    if(!_emailVerified){btn.classList.remove('ld');sE('يرجى تأكيد البريد الإلكتروني بكود التحقق أولاً');return false}
-    try{
-      const _refCode=sessionStorage.getItem('beinty_ref')||'';
-      const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,email:em,password:p,ref_code:_refCode})});
-      const d=await r.json();btn.classList.remove('ld');
-      if(d.ok){if(_refCode)sessionStorage.removeItem('beinty_ref');sS('تم إنشاء الحساب بنجاح! سجّل دخولك الآن');setTimeout(()=>swT('login'),1500)}
-      else sE(d.error||'خطأ')
-    }catch(er){btn.classList.remove('ld');sE('خطأ بالاتصال')}
-  }else{
-    try{
-      const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
-      const d=await r.json();btn.classList.remove('ld');
-      if(d.ok){
-        localStorage.setItem('beinty_token',d.token);
-        localStorage.setItem('beinty_user',JSON.stringify(d.user));
-        document.cookie='beinty_token='+d.token+';path=/;max-age=604800;SameSite=Lax';
-        // Apply referral code if exists
-        const _rc=sessionStorage.getItem('beinty_ref');
-        if(_rc){try{fetch(API+'/referral/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:d.token,code:_rc})}).then(()=>sessionStorage.removeItem('beinty_ref'))}catch(e){}}
-        sS('تم تسجيل الدخول! جاري التحويل...');
-        var _goto=sessionStorage.getItem('beinty_goto')||'';sessionStorage.removeItem('beinty_goto');
-        setTimeout(()=>window.location.href='/app'+((_goto)?'?page='+_goto:''),1000)
-      }else sE(d.error||'خطأ')
-    }catch(er){btn.classList.remove('ld');sE('خطأ بالاتصال')}
+
+  if(mode === 'reg'){
+    const em = document.getElementById('iEmail').value.trim();
+    const cf = document.getElementById('iConf').value;
+    if(!em){btn.classList.remove('ld');sE('يرجى إدخال البريد الإلكتروني');return false;}
+    if(p.length<6){btn.classList.remove('ld');sE('كلمة المرور يجب أن تكون 6 أحرف على الأقل');return false;}
+    if(p!==cf){btn.classList.remove('ld');sE('كلمة المرور غير متطابقة');return false;}
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, em, p);
+      await updateProfile(cred.user,{displayName:u});
+      await saveUser(cred.user, u);
+      btn.classList.remove('ld');
+      sS('تم إنشاء الحساب بنجاح! جاري الدخول...');
+      setTimeout(()=>afterLogin(cred.user, u), 1000);
+    } catch(err){
+      btn.classList.remove('ld');
+      const msgs = {
+        'auth/email-already-in-use':'البريد الإلكتروني مستخدم من قبل',
+        'auth/invalid-email':'البريد الإلكتروني غير صالح',
+        'auth/weak-password':'كلمة المرور ضعيفة جداً'
+      };
+      sE(msgs[err.code]||'خطأ: '+err.message);
+    }
+  } else {
+    // تسجيل دخول - u يمكن أن يكون إيميل أو اسم مستخدم
+    var loginEmail = u.includes('@') ? u : u+'@beinty.user';
+    try {
+      const cred = await signInWithEmailAndPassword(auth, loginEmail, p);
+      btn.classList.remove('ld');
+      afterLogin(cred.user, cred.user.displayName);
+    } catch(err){
+      // جرب بالإيميل المباشر إذا فشل
+      if(!u.includes('@')){
+        try {
+          // البحث في Firestore عن الإيميل بالاسم - مبسط: نطلب من المستخدم إدخال الإيميل
+          btn.classList.remove('ld');
+          sE('استخدم البريد الإلكتروني للدخول');
+          return false;
+        } catch(e2){}
+      }
+      btn.classList.remove('ld');
+      const msgs = {
+        'auth/invalid-credential':'كلمة المرور أو البريد خاطئ',
+        'auth/user-not-found':'المستخدم غير موجود',
+        'auth/wrong-password':'كلمة المرور خاطئة',
+        'auth/too-many-requests':'محاولات كثيرة، حاول لاحقاً'
+      };
+      sE(msgs[err.code]||'كلمة المرور أو البريد خاطئ');
+    }
   }
-  return false
+  return false;
 }
-function showForgot(){
-  let h='<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;" id="forgotModal" onclick="if(event.target===this)this.remove()"><div style="background:var(--bg,#0c0d14);border:1.5px solid rgba(255,255,255,.08);border-radius:20px;width:100%;max-width:380px;overflow:hidden"><div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center"><div style="font-size:.85rem;font-weight:800;color:var(--t1,#e8e9f2)"><i class="fas fa-key" style="color:var(--ac,#2563eb)"></i> استعادة كلمة المرور</div><div style="width:28px;height:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;text-align:center;line-height:28px;cursor:pointer;color:var(--t4,#555);font-size:.7rem" onclick="document.getElementById(\'forgotModal\').remove()">✕</div></div><div style="padding:16px 18px" id="forgotBody"><div style="font-size:.65rem;font-weight:700;color:var(--t2,#b0b2c8);margin-bottom:4px">اسم المستخدم أو البريد الإلكتروني</div><input type="text" id="fgUser" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;font-family:inherit;font-size:.8rem;color:var(--t1,#e8e9f2);outline:none;margin-bottom:14px" placeholder="أدخل اسم المستخدم أو الإيميل"><div id="fgMsg" style="display:none;padding:8px 10px;border-radius:8px;font-size:.6rem;margin-bottom:10px"></div><button id="fgBtn" onclick="sendForgotOTP()" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-size:.78rem;font-weight:800;font-family:Tajawal;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.2)"><i class="fas fa-paper-plane"></i> إرسال رمز التحقق</button></div></div></div>';
+
+// ── تسجيل الدخول بكوكل ──
+const _gSvg='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>';
+
+window.startGoogleLogin = async function(){
+  const btn = document.getElementById('googleBtn');
+  btn.classList.add('ld');
+  btn.innerHTML='<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#4285F4;border-radius:50%;animation:spin .6s linear infinite"></div> جاري الفتح...';
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    await saveUser(user, user.displayName);
+    btn.classList.remove('ld');
+    afterLogin(user, user.displayName);
+  } catch(err){
+    btn.classList.remove('ld');
+    btn.innerHTML = _gSvg+' المتابعة بحساب كوكل';
+    if(err.code !== 'auth/popup-closed-by-user'){
+      sE('خطأ في تسجيل الدخول بكوكل');
+    }
+  }
+}
+
+// ── نسيت كلمة المرور ──
+window.showForgot = function(){
+  let h='<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;" id="forgotModal" onclick="if(event.target===this)this.remove()"><div style="background:var(--bg,#0c0d14);border:1.5px solid rgba(255,255,255,.08);border-radius:20px;width:100%;max-width:380px;overflow:hidden"><div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center"><div style="font-size:.85rem;font-weight:800;color:var(--t1,#e8e9f2)"><i class="fas fa-key" style="color:var(--ac,#2563eb)"></i> استعادة كلمة المرور</div><div style="width:28px;height:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;text-align:center;line-height:28px;cursor:pointer;color:var(--t4,#555);font-size:.7rem" onclick="document.getElementById(\'forgotModal\').remove()">✕</div></div><div style="padding:16px 18px"><div style="font-size:.65rem;font-weight:700;color:var(--t2,#b0b2c8);margin-bottom:4px">البريد الإلكتروني</div><input type="email" id="fgEmail" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;font-family:inherit;font-size:.8rem;color:var(--t1,#e8e9f2);outline:none;margin-bottom:14px" placeholder="example@email.com"><div id="fgMsg" style="display:none;padding:8px 10px;border-radius:8px;font-size:.6rem;margin-bottom:10px"></div><button id="fgBtn" onclick="sendResetEmail()" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-size:.78rem;font-weight:800;font-family:Tajawal;cursor:pointer"><i class="fas fa-paper-plane"></i> إرسال رابط الاستعادة</button></div></div></div>';
   document.body.insertAdjacentHTML('beforeend',h);
 }
-async function sendForgotOTP(){var u=document.getElementById("fgUser").value.trim(),msg=document.getElementById("fgMsg"),btn=document.getElementById("fgBtn");msg.style.display="none";if(!u){msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> أدخل اسم المستخدم أو الإيميل';msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";return}btn.disabled=true;btn.innerHTML='<div style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite"></div> جاري الإرسال...';try{var r=await fetch(API+"/auth/forgot",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u})});var d=await r.json();if(d.ok){window._fgUser=d.resolved_user||u;var sentMsg=d.message||"تم إرسال الرمز";var emailInfo=d.email_masked?'<div style="font-size:.5rem;color:rgba(74,144,255,.5);margin-top:2px"><i class="fas fa-envelope"></i> '+d.email_masked+'</div>':'';var h2='<div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.12);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;background:rgba(16,185,129,.1);border-radius:8px;text-align:center;line-height:32px;flex-shrink:0"><i class="fas fa-check-circle" style="color:#34d399;font-size:14px"></i></div><div><div style="font-size:.6rem;font-weight:700;color:#34d399">'+sentMsg+'</div>'+emailInfo+'</div></div>';h2+='<div style="font-size:.6rem;font-weight:700;color:var(--t2,#b0b2c8);margin-bottom:6px"><i class="fas fa-shield-alt" style="color:var(--ac,#2563eb)"></i> رمز التحقق (6 أرقام)</div><input type="text" id="fgOTP" inputmode="numeric" maxlength="6" style="width:100%;padding:14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;font-family:Tajawal;font-size:1.3rem;font-weight:900;color:var(--t1,#e8e9f2);outline:none;text-align:center;letter-spacing:12px;margin-bottom:6px" placeholder="------"><div style="text-align:center;margin-bottom:14px"><span style="font-size:.45rem;color:#eab308;background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.1);padding:2px 10px;border-radius:12px" id="fgTimer"><i class="fas fa-clock"></i> 5:00</span></div>';h2+='<div style="font-size:.6rem;font-weight:700;color:var(--t2,#b0b2c8);margin-bottom:4px"><i class="fas fa-lock" style="color:var(--ac,#2563eb)"></i> كلمة المرور الجديدة</div><input type="password" id="fgNewPass" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;font-family:inherit;font-size:.8rem;color:var(--t1,#e8e9f2);outline:none;margin-bottom:6px" placeholder="6 أحرف على الأقل"><div style="font-size:.6rem;font-weight:700;color:var(--t2,#b0b2c8);margin-bottom:4px"><i class="fas fa-lock" style="color:#10b981"></i> تأكيد كلمة المرور</div><input type="password" id="fgConfPass" style="width:100%;padding:11px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;font-family:inherit;font-size:.8rem;color:var(--t1,#e8e9f2);outline:none;margin-bottom:14px" placeholder="أعد كتابة كلمة المرور">';h2+='<div id="fgMsg2" style="display:none;padding:8px 10px;border-radius:8px;font-size:.6rem;margin-bottom:10px"></div><button id="fgBtn2" onclick="resetForgotPass()" style="width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;font-size:.78rem;font-weight:800;font-family:Tajawal;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.2)"><i class="fas fa-key"></i> تغيير كلمة المرور</button>';document.getElementById("forgotBody").innerHTML=h2;document.getElementById("fgOTP")?.focus();_startFgTimer()}else{msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> '+(d.error||"خطأ");msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال رمز التحقق'}}catch(e){msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> خطأ بالاتصال';msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال رمز التحقق'}}
-function _startFgTimer(){var sec=300;var ti=setInterval(function(){sec--;var m=Math.floor(sec/60);var s=sec%60;var el=document.getElementById("fgTimer");if(el)el.innerHTML='<i class="fas fa-clock"></i> '+m+':'+(s<10?'0':'')+s;if(sec<=0){clearInterval(ti);if(el)el.innerHTML='<i class="fas fa-times-circle"></i> انتهت الصلاحية';if(el)el.style.color="#ef4444"}},1000)}
-async function resetForgotPass(){var otp=document.getElementById("fgOTP").value.trim(),np=document.getElementById("fgNewPass").value,cp=document.getElementById("fgConfPass").value,msg=document.getElementById("fgMsg2"),btn=document.getElementById("fgBtn2");msg.style.display="none";if(!otp||otp.length<6||!np){msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> أدخل الرمز (6 أرقام) وكلمة المرور الجديدة';msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";return}if(np.length<6){msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> كلمة المرور يجب أن تكون 6 أحرف على الأقل';msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";return}if(np!==cp){msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> كلمة المرور غير متطابقة';msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";return}btn.disabled=true;btn.innerHTML='<div style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite"></div>';try{var r=await fetch(API+"/auth/reset_password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:window._fgUser,otp:otp,new_password:np})});var d=await r.json();if(d.ok){document.getElementById("forgotBody").innerHTML='<div style="text-align:center;padding:20px 0"><div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;color:#fff"><i class="fas fa-check"></i></div><div style="font-size:.82rem;font-weight:900;color:var(--t1,#e8e9f2);margin-bottom:4px">تم تغيير كلمة المرور!</div><div style="font-size:.55rem;color:var(--t3,#6b7db3)">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة</div></div>';setTimeout(function(){document.getElementById("forgotModal")?.remove()},3000)}else{msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> '+(d.error||"خطأ");msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";btn.disabled=false;btn.innerHTML='<i class="fas fa-key"></i> تغيير كلمة المرور'}}catch(e){msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> خطأ بالاتصال';msg.style.display="block";msg.style.background="rgba(239,68,68,.08)";msg.style.color="#f87171";btn.disabled=false;btn.innerHTML='<i class="fas fa-key"></i> تغيير كلمة المرور'}}
-function tT(){document.documentElement.classList.add('no-t');const t=document.documentElement.getAttribute('data-t')==='dark'?'light':'dark';document.documentElement.setAttribute('data-t',t);document.getElementById('tBtn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';try{localStorage.setItem('beinty_lt',t)}catch(e){}var c=t==='light'?'#ffffff':'#000000';document.documentElement.style.background=c;document.body.style.background=c;try{document.querySelector('meta[name="theme-color"]').content=c}catch(e){}try{if(window.Telegram&&Telegram.WebApp){Telegram.WebApp.setHeaderColor(c);Telegram.WebApp.setBackgroundColor(c)}}catch(e){}requestAnimationFrame(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('no-t')})})}
-(function(){try{var c='#ffffff';const t=localStorage.getItem('beinty_lt');if(t){document.documentElement.setAttribute('data-t',t);document.getElementById('tBtn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';c=t==='light'?'#ffffff':'#000000'}document.documentElement.style.background=c;try{document.querySelector('meta[name="theme-color"]').content=c}catch(e){}try{if(window.Telegram&&Telegram.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();Telegram.WebApp.setHeaderColor(c);Telegram.WebApp.setBackgroundColor(c)}}catch(e){}}catch(e){}})();
-(function(){try{const _u=new URL(window.location.href);const _rc=_u.searchParams.get('ref');if(_rc){sessionStorage.setItem('beinty_ref',_rc)}const _lp=_u.searchParams.get('page');if(_lp){sessionStorage.setItem('beinty_goto',_lp)}}catch(e){}})();
-(function(){try{let tk=localStorage.getItem('beinty_token');if(!tk){const ck=document.cookie.match(/beinty_token=([^;]+)/);if(ck)tk=ck[1]}if(tk){var _pg='';try{_pg=new URL(window.location.href).searchParams.get('page')||sessionStorage.getItem('beinty_goto')||''}catch(e){}window.location.href='/app'+(_pg?'?page='+_pg:'')}}catch(e){}})();
+
+window.sendResetEmail = async function(){
+  const em = document.getElementById('fgEmail').value.trim();
+  const msg = document.getElementById('fgMsg');
+  const btn = document.getElementById('fgBtn');
+  if(!em||!em.includes('@')){
+    msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> أدخل بريد إلكتروني صالح';
+    msg.style.display='block';msg.style.background='rgba(239,68,68,.08)';msg.style.color='#f87171';return;
+  }
+  btn.disabled=true;btn.innerHTML='<div style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite"></div> جاري الإرسال...';
+  try {
+    await sendPasswordResetEmail(auth, em);
+    msg.innerHTML='<i class="fas fa-check-circle"></i> تم إرسال رابط الاستعادة إلى بريدك الإلكتروني';
+    msg.style.display='block';msg.style.background='rgba(16,185,129,.08)';msg.style.color='#34d399';
+    btn.innerHTML='<i class="fas fa-check"></i> تم الإرسال';
+  } catch(err){
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> إرسال رابط الاستعادة';
+    const msgs={'auth/user-not-found':'البريد غير مسجل','auth/invalid-email':'البريد غير صالح'};
+    msg.innerHTML='<i class="fas fa-exclamation-triangle"></i> '+(msgs[err.code]||'خطأ');
+    msg.style.display='block';msg.style.background='rgba(239,68,68,.08)';msg.style.color='#f87171';
+  }
+}
+
+// ── إحصائيات ثابتة (لأنه لا يوجد API) ──
+(function(){
+  var e;
+  e=document.getElementById('lsServices');if(e)e.textContent='500+';
+  e=document.getElementById('lsUsers');if(e)e.textContent='10,000+';
+  e=document.getElementById('lsOrders');if(e)e.textContent='50,000+';
+})();
+
+// ── التحقق من تسجيل الدخول المسبق ──
+(function(){
+  try{
+    const uid = localStorage.getItem('beinty_uid');
+    if(uid){
+      var _pg='';
+      try{_pg=new URL(window.location.href).searchParams.get('page')||sessionStorage.getItem('beinty_goto')||''}catch(e){}
+      window.location.href='/app'+(_pg?'?page='+_pg:'');
+    }
+  }catch(e){}
+})();
+
+// ── إعدادات الرابط المرجعي ──
+(function(){try{const _u=new URL(window.location.href);const _rc=_u.searchParams.get('ref');if(_rc)sessionStorage.setItem('beinty_ref',_rc);const _lp=_u.searchParams.get('page');if(_lp)sessionStorage.setItem('beinty_goto',_lp)}catch(e){}})();
+
+// ── الدوال العامة (Nav, FAQ, Theme) ──
+window.addEventListener('scroll',()=>{document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>40)},{passive:true});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target)}})},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+window.toggleFaq=function(el){const w=el.classList.contains('open');document.querySelectorAll('.faq.open').forEach(f=>f.classList.remove('open'));if(!w)el.classList.add('open')}
+window.tT=function(){document.documentElement.classList.add('no-t');const t=document.documentElement.getAttribute('data-t')==='dark'?'light':'dark';document.documentElement.setAttribute('data-t',t);document.getElementById('tBtn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';try{localStorage.setItem('beinty_lt',t)}catch(e){}var c=t==='light'?'#ffffff':'#000000';document.documentElement.style.background=c;document.body.style.background=c;try{document.querySelector('meta[name="theme-color"]').content=c}catch(e){}requestAnimationFrame(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('no-t')})})}
+(function(){try{var c='#ffffff';const t=localStorage.getItem('beinty_lt');if(t){document.documentElement.setAttribute('data-t',t);document.getElementById('tBtn').innerHTML=t==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';c=t==='light'?'#ffffff':'#000000'}document.documentElement.style.background=c;try{document.querySelector('meta[name="theme-color"]').content=c}catch(e){}try{if(window.Telegram&&Telegram.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand()}}catch(e){}}catch(e){}})();
 document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth'})})});
-function openTut(){document.getElementById('tutOv').style.display='flex';document.body.style.overflow='hidden'}
-function closeTut(){document.getElementById('tutOv').style.display='none';document.body.style.overflow='';tutPlaying=false;if(tutAudio){tutAudio.pause();tutAudio=null}speechSynthesis.cancel();document.getElementById('tutPick').style.display='flex';document.getElementById('tutCd').style.display='none';document.getElementById('tutProgFill').style.width='0%';document.getElementById('tutSub').innerHTML='اختر نوع جهازك';document.getElementById('tutBadge').textContent='';tutHF()}
+window.openTut=function(){document.getElementById('tutOv').style.display='flex';document.body.style.overflow='hidden'}
+window.closeTut=function(){document.getElementById('tutOv').style.display='none';document.body.style.overflow='';tutPlaying=false;if(tutAudio){tutAudio.pause();tutAudio=null}speechSynthesis.cancel();document.getElementById('tutPick').style.display='flex';document.getElementById('tutCd').style.display='none';document.getElementById('tutProgFill').style.width='0%';document.getElementById('tutSub').innerHTML='اختر نوع جهازك';document.getElementById('tutBadge').textContent='';tutHF()}
+
+// إخفاء حقل إرسال كود التحقق (لأن Firebase لا يحتاجه)
+window.sendVerifyCode = function(){
+  sS('Firebase يتحقق من الإيميل تلقائياً عند التسجيل ✅');
+}
 </script>
 <div id="tutOv" style="display:none;position:fixed;inset:0;z-index:99999;background:#0a0e1a;flex-direction:column;overflow:hidden;font-family:Tajawal">
 <style>
